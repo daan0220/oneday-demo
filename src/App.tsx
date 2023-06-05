@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import './firebase';
 import Auth from './Auth';
-import { HomePage } from './HomePage';
+import HomePage from "./HomePage";
 
 function App() {
   const [loggedIn, setLoggedIn] = useState<boolean>(false); // ログイン状態を管理する変数
