@@ -1,37 +1,18 @@
 import React, { useState, ChangeEvent, FormEvent } from 'react';
 import { TextField, Button } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import { collection, doc, setDoc, getDoc } from 'firebase/firestore';
+import { db } from './firebase';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+
 
 const HomePage = () => {
   const [name, setName] = useState('');
-  const [age, setAge] = useState('');
-  const [gender, setGender] = useState('');
   const [bio, setBio] = useState('');
-  const [topImage, setTopImage] = useState<File | null>(null);
-  const [previewURL, setPreviewURL] = useState<string | null>(null);
+  const [image, setImage] = useState('');
 
   const handleNameChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    // 数字以外の文字が含まれていないかチェック
-    if (/^[0-9]*$/.test(value)) {
-      alert('名前は数字以外の文字を含めることはできません');
-    } else {
-      setName(value);
-    }
-  };
-
-  const handleAgeChange = (event: ChangeEvent<HTMLInputElement>) => {
-    const value = event.target.value;
-    // 数字以外の文字が含まれている場合は空文字にする
-    if (/^[0-9]*$/.test(value)) {
-      setAge(value);
-    } else {
-      alert('年齢は半角数字のみ入力してください');
-    }
-  };
-
-  const handleGenderChange = (event: ChangeEvent<{ value: unknown }>) => {
-    setGender(event.target.value as string);
+    setName(event.target.value);
   };
 
   const handleBioChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -41,23 +22,43 @@ const HomePage = () => {
   const handleImageChange = (event: ChangeEvent<HTMLInputElement>) => {
     if (event.target.files && event.target.files.length > 0) {
       const selectedFile = event.target.files[0];
-      setTopImage(selectedFile);
-      setPreviewURL(URL.createObjectURL(selectedFile));
+      const imageUrl = URL.createObjectURL(selectedFile);
+      setImage(imageUrl);
     }
   };
 
   const navigate = useNavigate();
 
-  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
 
-    if (name.trim() !== '' && age.trim() !== '' && gender !== '') {
-      // 名前、年齢、性別、自己紹介文、トップ画像の登録処理を行う（Firebaseなどのバックエンドに保存するなど）
+    if (name.trim() !== '' && bio.trim() !== '') {
+      try {
+        const auth = getAuth();
+        const user = auth.currentUser;
 
-      // 登録が完了したら、成功メッセージを表示するなどの処理を行う
-      navigate('/main');
+        if (user) {
+          const userId = user.uid;
+          const profileDocRef = doc(db, 'profiles', userId);
+
+          const profileData = {
+            name,
+            bio,
+            imageUrl: image,
+          };
+
+          await setDoc(profileDocRef, profileData);
+
+          console.log('Profile created/updated.');
+        } else {
+          console.log('User is not logged in.');
+        }
+
+        navigate('/main');
+      } catch (error) {
+        console.error('Error adding/updating profile: ', error);
+      }
     } else {
-      // 必須項目が入力されていない場合はエラーメッセージを表示するなどの処理を行う
       alert('全ての項目を入力してください');
     }
   };
@@ -76,27 +77,6 @@ const HomePage = () => {
         <br />
         <TextField
           style={{ marginBottom: '10px' }}
-          label="Age"
-          variant="outlined"
-          value={age}
-          onChange={handleAgeChange}
-        />
-        <br />
-        <TextField
-          style={{ marginBottom: '10px' }}
-          select
-          label="Gender"
-          variant="outlined"
-          value={gender}
-          onChange={handleGenderChange}
-        >
-          <option value="male">Male</option>
-          <option value="female">Female</option>
-          <option value="other">Other</option>
-        </TextField>
-        <br />
-        <TextField
-          style={{ marginBottom: '10px' }}
           label="Bio"
           variant="outlined"
           value={bio}
@@ -106,33 +86,33 @@ const HomePage = () => {
         <div style={{ display: 'flex', alignItems: 'center', marginBottom: '10px' }}>
           <input
             type="file"
-            id="top-image"
+            id="image"
             style={{ display: 'none' }}
             onChange={handleImageChange}
           />
-          <label htmlFor="top-image" style={{ marginRight: '10px', cursor: 'pointer' }}>
-            Choose File Image
+          <label htmlFor="image" style={{ marginRight: '10px', cursor: 'pointer' }}>
+            Choose Image
           </label>
-          {previewURL && (
+          {image && (
             <div
-            style={{
-              width: '200px',
-              height: '200px',
-              borderRadius: '50%',
-              overflow: 'hidden',
-              flexShrink: 0,
-            }}
-          >
-            <img
-              src={previewURL}
-              alt="Preview"
               style={{
-                width: '100%',
-                height: '100%',
-                objectFit: 'cover',
+                width: '200px',
+                height: '200px',
+                borderRadius: '50%',
+                overflow: 'hidden',
+                flexShrink: 0,
               }}
-            />
-          </div>
+            >
+              <img
+                src={image}
+                alt="Profile Image"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: 'cover',
+                }}
+              />
+            </div>
           )}
         </div>
         <br />

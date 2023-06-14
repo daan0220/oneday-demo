@@ -1,0 +1,6 @@
+CREATE TABLE profiles (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(255),
+  bio TEXT,
+  imageUrl VARCHAR(255)
+);

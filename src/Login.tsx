@@ -2,13 +2,37 @@ import React, { useState } from "react";
 import { auth } from "./firebase";
 import { createUserWithEmailAndPassword, signInWithEmailAndPassword } from "firebase/auth";
 import { useNavigate } from "react-router-dom";
-import { Box, Button, Container, Grid, TextField } from "@mui/material";
+import { Box, Button, Container, Grid, TextField, Typography } from "@mui/material";
+import { styled } from "@mui/system";
+
+const StyledContainer = styled(Container)({
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  height: "100vh",
+});
+
+const StyledBox = styled(Box)({
+  padding: "2em",
+  maxWidth: "400px",
+  width: "100%",
+  backgroundColor: "#ffffff",
+  borderRadius: "8px",
+  boxShadow: "0px 2px 4px rgba(0, 0, 0, 0.1)",
+});
+
+const StyledButton = styled(Button)({
+  marginTop: "1em",
+  marginBottom: "1em",
+});
+
 type AuthProps = {
-    setLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
-  };
+  setLoggedIn: React.Dispatch<React.SetStateAction<boolean>>;
+};
+
 const Auth: React.FC<AuthProps> = ({ setLoggedIn }) => {
-  const [email, setEmail] = useState<string>("");
-  const [password, setPassword] = useState<string>("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
 
   const navigate = useNavigate();
 
@@ -16,8 +40,8 @@ const Auth: React.FC<AuthProps> = ({ setLoggedIn }) => {
     await createUserWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         console.log(userCredential);
-        setLoggedIn(true); // ユーザーがログインしたらログイン状態をtrueに設定
-        navigate("/home");
+        setLoggedIn(true);
+        navigate("/home"); // 新規ログインの場合は "/profile" に遷移
       })
       .catch((error) => {
         alert(error.message);
@@ -29,8 +53,8 @@ const Auth: React.FC<AuthProps> = ({ setLoggedIn }) => {
     await signInWithEmailAndPassword(auth, email, password)
       .then((userCredential) => {
         console.log(userCredential);
-        setLoggedIn(true); // ユーザーがログインしたらログイン状態をtrueに設定
-        navigate("/home");
+        setLoggedIn(true);
+        navigate("/main"); // ログインの場合は "/main" に遷移
       })
       .catch((error) => {
         alert(error.message);
@@ -47,54 +71,41 @@ const Auth: React.FC<AuthProps> = ({ setLoggedIn }) => {
   };
 
   return (
-    <Container>
-      <Grid container>
-        <Grid item md={4}></Grid>
-        <Grid item md={4}>
-          <Grid item md={4}>
+    <StyledContainer>
+      <StyledBox>
+        <Typography variant="h5" align="center" gutterBottom>
+          ログイン
+        </Typography>
+        <Box component="form">
+          <TextField
+            style={{ marginBottom: "1em" }}
+            name="email"
+            label="E-mail"
+            fullWidth
+            variant="outlined"
+            value={email}
+            onChange={handleChangeEmail}
+          />
+          <TextField
+            style={{ marginBottom: "1em" }}
+            name="password"
+            label="Password"
+            fullWidth
+            variant="outlined"
+            type="password"
+            value={password}
+            onChange={handleChangePassword}
+          />
+          <StyledButton fullWidth onClick={register} variant="contained" color="primary">
+            新規登録
+          </StyledButton>
+          <StyledButton fullWidth onClick={login} variant="contained" color="primary">
             ログイン
-          </Grid>
-          <Box component="form">
-            <TextField
-              style={{ marginTop: "0.5em", marginBottom: "0.5em" }}
-              name="email"
-              label="E-mail"
-              fullWidth
-              variant="outlined"
-              value={email}
-              onChange={handleChangeEmail}
-            />
-            <TextField
-              style={{ marginTop: "0.5em", marginBottom: "0.5em" }}
-              name="password"
-              label="Password"
-              fullWidth
-              variant="outlined"
-              type="password"
-              value={password}
-              onChange={handleChangePassword}
-            />
-            <Button
-              fullWidth
-              style={{ marginTop: "0.5em", marginBottom: "0.5em" }}
-              onClick={register}
-            >
-              新規登録
-            </Button>
-            <Button
-              fullWidth
-              style={{ marginTop: "0.5em", marginBottom: "0.5em" }}
-              onClick={login}
-            >
-              ログイン
-            </Button>
-          </Box>
-        </Grid>
-        <Grid item md={4}></Grid>
-      </Grid>
-    </Container>
+          </StyledButton>
+        </Box>
+      </StyledBox>
+    </StyledContainer>
   );
 };
 
 export default Auth;
-

@@ -1,6 +1,10 @@
-import React from 'react';
-import { Typography, Avatar, Box, Grid, Paper, createTheme, ThemeProvider, Divider } from '@mui/material';
+import React, { useEffect, useState } from 'react';
+import { Typography, Avatar, Box, Grid, Paper, createTheme, ThemeProvider } from '@mui/material';
 import { styled } from '@mui/system';
+import { getDoc, doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { db } from './firebase';
+import { getAuth, onAuthStateChanged } from 'firebase/auth';
+
 
 const theme = createTheme();
 
@@ -13,69 +17,104 @@ const EditLink = styled(Typography)(({ theme }) => ({
   },
 }));
 
-const Post = ({ title, content }: { title: string; content: string }) => {
-  return (
-    <Paper sx={{ p: 2, mt: 2 }}>
-      <Typography variant="h6" sx={{ mb: 1 }}>
-        {title}
-      </Typography>
-      <Typography variant="body1">{content}</Typography>
-    </Paper>
-  );
-};
+interface ProfileData {
+  name: string;
+  bio: string;
+  followers: number;
+  following: number;
+  website: string;
+  profilePictureUrl: string;
+}
 
-const Main = () => {
+const Home = () => {
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const auth = getAuth();
+
+  useEffect(() => {
+    const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        const userId = user.uid; // ログインユーザーのUIDを取得
+        const profileDocRef = doc(db, 'profiles', userId);
+
+        const unsubscribeProfile = onSnapshot(profileDocRef, (docSnapshot) => {
+          if (docSnapshot.exists()) {
+            const profileData = docSnapshot.data() as ProfileData;
+            setProfile(profileData);
+          } else {
+            console.log('Profile document does not exist.');
+            setProfile(null); // ドキュメントが存在しない場合はnullを設定する
+          }
+        });
+
+        return () => {
+          unsubscribeProfile();
+        };
+      } else {
+        console.log('User is not logged in.');
+        setProfile(null); // ユーザーがログインしていない場合もnullを設定する
+      }
+    });
+
+    return () => {
+      unsubscribeAuth();
+    };
+  }, []);
+
+  const handleCreateProfile = async (userId: string) => {
+    const initialProfileData: ProfileData = {
+      name: '',
+      bio: '',
+      followers: 0,
+      following: 0,
+      website: '',
+      profilePictureUrl: '',
+    };
+
+    try {
+      await setDoc(doc(db, 'profiles', userId), initialProfileData);
+      console.log('Profile document created.');
+    } catch (error) {
+      console.error('Error creating profile document: ', error);
+    }
+  };
+
+  if (!profile) {
+    return null; // プロフィールが読み込まれるまで何も表示しない
+  }
+
+  const { name, bio, followers, following, website, profilePictureUrl } = profile;
+
+  // プロフィールが存在する場合の処理
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ backgroundColor: '#f7f7f7', padding: '20px' }}>
         <Paper sx={{ p: 2 }}>
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} md={3}>
-              <Avatar
-                alt="Profile Picture"
-                src="https://example.com/profile-picture.jpg"
-                sx={{ width: 200, height: 200 }}
-              />
+              <Avatar alt="Profile Picture" src={profilePictureUrl} sx={{ width: 200, height: 200 }} />
             </Grid>
             <Grid item xs={12} md={9}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Typography variant="h4" sx={{ mb: 1 }}>
-                  John Doe
+                  {name}
                 </Typography>
                 <EditLink variant="body1">Edit Profile</EditLink>
               </Box>
               <Typography variant="body1" sx={{ mb: 2 }}>
-                Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nullam auctor velit in nisi eleifend, eu
-                dapibus mauris fermentum. Donec faucibus fringilla eros, at auctor risus aliquam et. Quisque ut
-                pretium risus. Nunc at tempor mauris.
+                {bio}
               </Typography>
-              <Box sx={{ display: 'flex', alignItems: 'center', marginBottom: 2 }}>
-                <Typography variant="body1" sx={{ marginRight: 2 }}>
-                  Followers: 1000
-                </Typography>
-                <Typography variant="body1" sx={{ marginRight: 2 }}>
-                  Following: 500
-                </Typography>
-              </Box>
-              <Typography variant="body1">
-                Website: <a href="https://example.com">example.com</a>
+              <Typography variant="body2" color="textSecondary">
+                {followers} Followers &middot; {following} Following
+              </Typography>
+              <Typography variant="body2" color="textSecondary">
+                {website}
               </Typography>
             </Grid>
           </Grid>
         </Paper>
-
-        <Divider sx={{ my: 4 }} />
-
-        <Typography variant="h5" sx={{ mb: 2 }}>
-          My Posts
-        </Typography>
-
-        <Post title="First Post" content="Lorem ipsum dolor sit amet, consectetur adipiscing elit." />
-        <Post title="Second Post" content="Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." />
-        <Post title="Third Post" content="Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris." />
       </Box>
     </ThemeProvider>
   );
 };
 
-export default Main;
+export default Home;
