@@ -4,11 +4,13 @@ import { styled } from '@mui/system';
 import { getDoc, doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
+import { Navigate, useNavigate, Link } from "react-router-dom";
+
 
 
 const theme = createTheme();
 
-const EditLink = styled(Typography)(({ theme }) => ({
+const EditLink = styled(Link)(({ theme }) => ({
   color: theme.palette.primary.main,
   textDecoration: 'underline',
   cursor: 'pointer',
@@ -23,29 +25,33 @@ interface ProfileData {
   followers: number;
   following: number;
   website: string;
-  profilePictureUrl: string;
+  // profilePictureUrl: string;
+  imageUrl: string;
 }
 
 const Home = () => {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const auth = getAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
         const userId = user.uid; // ログインユーザーのUIDを取得
         const profileDocRef = doc(db, 'profiles', userId);
-
+  
         const unsubscribeProfile = onSnapshot(profileDocRef, (docSnapshot) => {
           if (docSnapshot.exists()) {
             const profileData = docSnapshot.data() as ProfileData;
             setProfile(profileData);
+            navigate("/main"); // プロフィールが設定されている場合は直接 "/main" に遷移
           } else {
             console.log('Profile document does not exist.');
             setProfile(null); // ドキュメントが存在しない場合はnullを設定する
+            navigate("/home"); // プロフィールが設定されていない場合は "/home" に遷移
           }
         });
-
+        
         return () => {
           unsubscribeProfile();
         };
@@ -54,7 +60,7 @@ const Home = () => {
         setProfile(null); // ユーザーがログインしていない場合もnullを設定する
       }
     });
-
+  
     return () => {
       unsubscribeAuth();
     };
@@ -67,12 +73,14 @@ const Home = () => {
       followers: 0,
       following: 0,
       website: '',
-      profilePictureUrl: '',
+      // profilePictureUrl: '',
+      imageUrl: ''
     };
 
     try {
       await setDoc(doc(db, 'profiles', userId), initialProfileData);
       console.log('Profile document created.');
+      setProfile(initialProfileData);
     } catch (error) {
       console.error('Error creating profile document: ', error);
     }
@@ -82,7 +90,11 @@ const Home = () => {
     return null; // プロフィールが読み込まれるまで何も表示しない
   }
 
-  const { name, bio, followers, following, website, profilePictureUrl } = profile;
+  const handleEditProfile = () => {
+    navigate("/edit-profile"); // プロフィール編集ページに遷移
+  };
+
+  const { name, bio, followers, following, website, imageUrl } = profile;
 
   // プロフィールが存在する場合の処理
   return (
@@ -91,14 +103,14 @@ const Home = () => {
         <Paper sx={{ p: 2 }}>
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} md={3}>
-              <Avatar alt="Profile Picture" src={profilePictureUrl} sx={{ width: 200, height: 200 }} />
+            <Avatar alt="imageUrl" src={imageUrl} sx={{ width: 200, height: 200 }} />
             </Grid>
             <Grid item xs={12} md={9}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                 <Typography variant="h4" sx={{ mb: 1 }}>
                   {name}
                 </Typography>
-                <EditLink variant="body1">Edit Profile</EditLink>
+                <EditLink to="/edit-profile" onClick={handleEditProfile}>Edit Profile</EditLink>
               </Box>
               <Typography variant="body1" sx={{ mb: 2 }}>
                 {bio}

@@ -4,7 +4,7 @@ import './firebase';
 import Auth from './Login';
 import HomePage from "./Profile";
 import Main from "./Main";
-
+import EditProfile from "./EditProfile";
 
 function App() {
   const [loggedIn, setLoggedIn] = useState<boolean>(false); // ログイン状態を管理する変数
@@ -23,6 +23,10 @@ function App() {
         <Route
           path="/main"
           element={loggedIn ? <Main /> : <Navigate to="/" />}
+        />
+        <Route
+          path="/edit-profile"
+          element={<EditProfile />}
         />
       </Routes>
     </Router>
