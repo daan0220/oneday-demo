@@ -5,6 +5,7 @@ import Auth from './Login';
 import HomePage from "./Profile";
 import Main from "./Main";
 import EditProfile from "./EditProfile";
+import TimerScreen from "./TimerScreen";
 
 function App() {
   const [loggedIn, setLoggedIn] = useState<boolean>(false); // ログイン状態を管理する変数
@@ -27,6 +28,10 @@ function App() {
         <Route
           path="/edit-profile"
           element={<EditProfile />}
+        />
+        <Route
+          path="/timer"
+          element={<TimerScreen />}
         />
       </Routes>
     </Router>

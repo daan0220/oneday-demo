@@ -4,7 +4,10 @@ import { styled } from '@mui/system';
 import { getDoc, doc, setDoc, onSnapshot } from 'firebase/firestore';
 import { db } from './firebase';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { Navigate, useNavigate, Link } from "react-router-dom";
+import { Navigate, useNavigate, Link, Outlet } from "react-router-dom";
+import TimerScreen from './TimerScreen';
+import { Button } from '@mui/material'; // Buttonを@mui/materialからインポートする
+
 
 
 
@@ -103,7 +106,7 @@ const Home = () => {
         <Paper sx={{ p: 2 }}>
           <Grid container spacing={2} alignItems="center">
             <Grid item xs={12} md={3}>
-            <Avatar alt="imageUrl" src={imageUrl} sx={{ width: 200, height: 200 }} />
+              <Avatar alt="imageUrl" src={imageUrl} sx={{ width: 200, height: 200 }} />
             </Grid>
             <Grid item xs={12} md={9}>
               <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
@@ -121,9 +124,13 @@ const Home = () => {
               <Typography variant="body2" color="textSecondary">
                 {website}
               </Typography>
+              <Button variant="contained" color="primary" component={Link} to="/timer">
+                Start Studying
+              </Button>
             </Grid>
           </Grid>
         </Paper>
+        <Outlet />
       </Box>
     </ThemeProvider>
   );
