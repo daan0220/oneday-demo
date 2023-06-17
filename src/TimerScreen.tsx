@@ -26,10 +26,14 @@ const TimerScreen: React.FC = () => {
       return;
     }
 
+    if (timer === 0) {
+      setTimer(minutes * 60); // スタートボタンを押した時に初期化する
+    }
+
     setIsRunning(true);
-    setTimer(minutes * 60);
     setThemeSubmitted(true);
   };
+
 
   const handleStopTimer = () => {
     setIsRunning(false);

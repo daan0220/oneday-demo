@@ -6,10 +6,7 @@ import { db } from './firebase';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { Navigate, useNavigate, Link, Outlet } from "react-router-dom";
 import TimerScreen from './TimerScreen';
-import { Button } from '@mui/material'; // Buttonを@mui/materialからインポートする
-
-
-
+import { Button } from '@mui/material';
 
 const theme = createTheme();
 
@@ -28,8 +25,14 @@ interface ProfileData {
   followers: number;
   following: number;
   website: string;
-  // profilePictureUrl: string;
   imageUrl: string;
+  posts: Post[];
+}
+
+interface Post {
+  studyTheme: string;
+  additionalText: string;
+  timestamp: any; // 適切なタイムスタンプの型に置き換えてください
 }
 
 const Home = () => {
@@ -76,8 +79,8 @@ const Home = () => {
       followers: 0,
       following: 0,
       website: '',
-      // profilePictureUrl: '',
-      imageUrl: ''
+      imageUrl: '',
+      posts: [],
     };
 
     try {
