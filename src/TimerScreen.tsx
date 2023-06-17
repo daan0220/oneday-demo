@@ -1,14 +1,21 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Typography, TextField, Modal, Box, Slider } from '@mui/material';
+import { Button, Typography, TextField, Box, IconButton, Slider } from '@mui/material';
+import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
+import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
+import { useNavigate } from 'react-router-dom';
+import EditModal from './EditModal ';
+import ConfirmationModal from './ConfirmationModal';
 
-const TimerScreen = () => {
+const TimerScreen: React.FC = () => {
   const [timer, setTimer] = useState(0);
   const [isRunning, setIsRunning] = useState(false);
   const [studyTheme, setStudyTheme] = useState('');
   const [themeSubmitted, setThemeSubmitted] = useState(false);
-  const [minutes, setMinutes] = useState(15);
+  const [minutes, setMinutes] = useState(1);
   const [showConfirmation, setShowConfirmation] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [additionalText, setAdditionalText] = useState('');
+  const navigate = useNavigate();
 
   const handleStartTimer = () => {
     if (studyTheme.trim() === '') {
@@ -20,7 +27,7 @@ const TimerScreen = () => {
     }
 
     setIsRunning(true);
-    setTimer(minutes * 60); // 分数を秒数に変換して設定
+    setTimer(minutes * 60);
     setThemeSubmitted(true);
   };
 
@@ -32,15 +39,26 @@ const TimerScreen = () => {
     setStudyTheme(e.target.value);
   };
 
-  const handleMinutesChange = (event: Event, value: number | number[]) => {
-    const minutes = Array.isArray(value) ? value[0] : value;
-    setMinutes(minutes);
+  const handleSliderChange = (event: Event, value: number | number[]) => {
+    if (Array.isArray(value)) {
+      setMinutes(value[0]);
+    } else {
+      setMinutes(value);
+    }
   };
-  
+
+  const handleMinusClick = () => {
+    setMinutes((prevMinutes) => Math.max(prevMinutes - 1, 1));
+  };
+
+  const handlePlusClick = () => {
+    setMinutes((prevMinutes) => Math.min(prevMinutes + 1, 120));
+  };
 
   const handlePostConfirmation = () => {
     setShowConfirmation(false);
     setShowModal(true);
+    setIsRunning(false);
   };
 
   const handlePostCancel = () => {
@@ -49,13 +67,12 @@ const TimerScreen = () => {
 
   const handleModalClose = () => {
     setShowModal(false);
+    setIsRunning(true);
   };
 
   const handlePost = () => {
-    // 投稿処理を実行する
-    // バックエンドのAPIを呼び出したり、ライブラリを使用したりするなどの方法で実装する
-    alert('Study theme posted!');
     setShowModal(false);
+    navigate('/main');
   };
 
   useEffect(() => {
@@ -68,7 +85,9 @@ const TimerScreen = () => {
     }
 
     if (timer === 0) {
-      clearInterval(interval);
+      if (interval) {
+        clearInterval(interval);
+      }
       setIsRunning(false);
       if (themeSubmitted) {
         setShowConfirmation(true);
@@ -83,114 +102,81 @@ const TimerScreen = () => {
   }, [isRunning, timer, themeSubmitted]);
 
   return (
-    <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
-      <div>
-        {themeSubmitted ? (
-          <Typography variant="h6" gutterBottom>
-            Study Theme: {studyTheme}
-          </Typography>
-        ) : (
-          <TextField
-            label="Enter your study theme"
-            variant="outlined"
-            fullWidth
-            value={studyTheme}
-            onChange={handleThemeChange}
-            sx={{ marginBottom: '1rem' }}
-          />
-        )}
+    <>
+      {showModal && (
+        <EditModal
+          showModal={showModal}
+          handleModalClose={handleModalClose}
+          studyTheme={studyTheme}
+          setStudyTheme={setStudyTheme}
+          additionalText={additionalText}
+          setAdditionalText={setAdditionalText}
+          handlePost={handlePost}
+        />
+      )}
 
-        {!isRunning && (
+      {showConfirmation && (
+        <ConfirmationModal
+          showConfirmation={showConfirmation}
+          handlePostConfirmation={handlePostConfirmation}
+          handlePostCancel={handlePostCancel}
+          studyTheme={studyTheme}
+        />
+      )}
+
+      {!showModal && (
+        <Box display="flex" justifyContent="center" alignItems="center" minHeight="100vh">
           <div>
-            <Typography variant="h6" gutterBottom>
-              Set minutes (15 minutes or more)
-            </Typography>
-            <Slider
-              value={minutes}
-              onChange={handleMinutesChange}
-              min={15}
-              step={1}
-              marks
-              valueLabelDisplay="auto"
-            />
-            <Button variant="contained" color="primary" onClick={handleStartTimer}>
-              Start Timer
-            </Button>
-          </div>
-        )}
-
-        {isRunning && (
-          <Typography variant="h4" gutterBottom>
-            Timer: {Math.floor(timer / 60)}:{timer % 60 < 10 ? '0' + (timer % 60) : timer % 60}
-          </Typography>
-        )}
-
-        {isRunning && (
-          <Button variant="contained" color="secondary" onClick={handleStopTimer}>
-            Stop Timer
-          </Button>
-        )}
-
-        <Modal open={showConfirmation} onClose={handlePostCancel}>
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight="100vh"
-            bgcolor="rgba(0, 0, 0, 0.5)"
-          >
-            <div>
-              <Typography variant="h6" gutterBottom align="center">
-                This is your study theme: {studyTheme}
+            {themeSubmitted ? (
+              <Typography variant="h4" component="h1" gutterBottom>
+                {studyTheme}
               </Typography>
-              <Typography variant="h6" gutterBottom align="center">
-                Do you want to post this achievement?
-              </Typography>
-              <Box display="flex" justifyContent="center" alignItems="center" marginTop="1rem">
-                <Button variant="contained" color="primary" onClick={handlePostConfirmation} sx={{ marginRight: '1rem' }}>
-                  Yes
-                </Button>
-                <Button variant="contained" color="secondary" onClick={handlePostCancel}>
-                  No
-                </Button>
-              </Box>
-            </div>
-          </Box>
-        </Modal>
-
-        <Modal open={showModal} onClose={handleModalClose}>
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight="100vh"
-            bgcolor="rgba(0, 0, 0, 0.5)"
-          >
-            <div>
-              <Typography variant="h6" gutterBottom align="center">
-                Post your study theme:
-              </Typography>
+            ) : (
               <TextField
-                label="Study theme"
-                variant="outlined"
-                fullWidth
+                id="study-theme-input"
+                label="Enter a Study Theme"
                 value={studyTheme}
-                disabled
-                sx={{ marginBottom: '1rem' }}
+                onChange={handleThemeChange}
+                fullWidth
+                margin="normal"
+                variant="outlined"
               />
-              <Box display="flex" justifyContent="center" alignItems="center" marginTop="1rem">
-                <Button variant="contained" color="primary" onClick={handlePost} sx={{ marginRight: '1rem' }}>
-                  Post
+            )}
+            <Box display="flex" alignItems="center" justifyContent="center">
+              <IconButton onClick={handleMinusClick} color="primary" aria-label="minus">
+                <ArrowDownwardIcon />
+              </IconButton>
+              <Slider
+                value={minutes}
+                onChange={handleSliderChange}
+                min={1}
+                max={120}
+                step={1}
+                sx={{ width: 200 }}
+              />
+              <IconButton onClick={handlePlusClick} color="primary" aria-label="plus">
+                <ArrowUpwardIcon />
+              </IconButton>
+            </Box>
+            <Box display="flex" justifyContent="center" alignItems="center">
+              {isRunning ? (
+                <Button onClick={handleStopTimer} variant="contained" color="secondary" sx={{ mr: 2 }}>
+                  Stop
                 </Button>
-                <Button variant="contained" color="secondary" onClick={handleModalClose}>
-                  Cancel
+              ) : (
+                <Button onClick={handleStartTimer} variant="contained" color="primary" sx={{ mr: 2 }}>
+                  Start
                 </Button>
-              </Box>
-            </div>
-          </Box>
-        </Modal>
-      </div>
-    </Box>
+              )}
+              <Typography variant="h4" component="p">
+                {Math.floor(timer / 60).toString().padStart(2, '0')}:
+                {(timer % 60).toString().padStart(2, '0')}
+              </Typography>
+            </Box>
+          </div>
+        </Box>
+      )}
+    </>
   );
 };
 
