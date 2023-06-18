@@ -1,12 +1,14 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Avatar, Box, Grid, Paper, createTheme, ThemeProvider } from '@mui/material';
+import { Typography, Box, Paper, createTheme, ThemeProvider } from '@mui/material';
 import { styled } from '@mui/system';
-import { getDoc, doc, setDoc, onSnapshot } from 'firebase/firestore';
+import { getDoc, doc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { Navigate, useNavigate, Link, Outlet } from "react-router-dom";
-import TimerScreen from './TimerScreen';
-import { Button } from '@mui/material';
+import { Navigate, useNavigate, Link, Outlet } from 'react-router-dom';
+import { Button, IconButton } from '@mui/material';
+import { MoreHoriz as MoreHorizIcon, Favorite as FavoriteIcon } from '@mui/icons-material';
+import AvatarSection from './AvatarSection';
+import ProfilePostsSection from './ProfilePostsSection';
 
 const theme = createTheme();
 
@@ -33,6 +35,7 @@ interface Post {
   studyTheme: string;
   additionalText: string;
   timestamp: any; // 適切なタイムスタンプの型に置き換えてください
+  likes: number; // いいねの数を表すプロパティを追加
 }
 
 const Home = () => {
@@ -43,30 +46,30 @@ const Home = () => {
   useEffect(() => {
     const unsubscribeAuth = onAuthStateChanged(auth, (user) => {
       if (user) {
-        const userId = user.uid; // ログインユーザーのUIDを取得
+        const userId = user.uid;
         const profileDocRef = doc(db, 'profiles', userId);
-  
+
         const unsubscribeProfile = onSnapshot(profileDocRef, (docSnapshot) => {
           if (docSnapshot.exists()) {
             const profileData = docSnapshot.data() as ProfileData;
             setProfile(profileData);
-            navigate("/main"); // プロフィールが設定されている場合は直接 "/main" に遷移
+            navigate('/main');
           } else {
             console.log('Profile document does not exist.');
-            setProfile(null); // ドキュメントが存在しない場合はnullを設定する
-            navigate("/home"); // プロフィールが設定されていない場合は "/home" に遷移
+            setProfile(null);
+            navigate('/home');
           }
         });
-        
+
         return () => {
           unsubscribeProfile();
         };
       } else {
         console.log('User is not logged in.');
-        setProfile(null); // ユーザーがログインしていない場合もnullを設定する
+        setProfile(null);
       }
     });
-  
+
     return () => {
       unsubscribeAuth();
     };
@@ -93,46 +96,63 @@ const Home = () => {
   };
 
   if (!profile) {
-    return null; // プロフィールが読み込まれるまで何も表示しない
+    return null;
   }
 
   const handleEditProfile = () => {
-    navigate("/edit-profile"); // プロフィール編集ページに遷移
+    navigate('/edit-profile');
   };
 
   const { name, bio, followers, following, website, imageUrl } = profile;
 
-  // プロフィールが存在する場合の処理
+  const handleEditPost = (index: number) => {
+    navigate(`/edit-post/${index}`);
+  };
+
+  const handleLikePost = async (index: number) => {
+    const updatedPosts = [...profile!.posts];
+    const post = updatedPosts[index];
+
+    if (post.likes % 2 === 0) {
+      // ユーザーがまだいいねしていない場合は、いいねを増やす
+      post.likes += 1;
+    } else {
+      // ユーザーが既にいいねしている場合は、いいねを取り消す
+      post.likes -= 1;
+    }
+
+    setProfile({ ...profile!, posts: updatedPosts });
+
+    const userId = auth.currentUser!.uid;
+    const profileDocRef = doc(db, 'profiles', userId);
+    try {
+      await updateDoc(profileDocRef, { posts: updatedPosts });
+      console.log('Post liked and updated in Firestore.');
+    } catch (error) {
+      console.error('Error updating post in Firestore: ', error);
+    }
+  };
+
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ backgroundColor: '#f7f7f7', padding: '20px' }}>
-        <Paper sx={{ p: 2 }}>
-          <Grid container spacing={2} alignItems="center">
-            <Grid item xs={12} md={3}>
-              <Avatar alt="imageUrl" src={imageUrl} sx={{ width: 200, height: 200 }} />
-            </Grid>
-            <Grid item xs={12} md={9}>
-              <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                <Typography variant="h4" sx={{ mb: 1 }}>
-                  {name}
-                </Typography>
-                <EditLink to="/edit-profile" onClick={handleEditProfile}>Edit Profile</EditLink>
-              </Box>
-              <Typography variant="body1" sx={{ mb: 2 }}>
-                {bio}
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                {followers} Followers &middot; {following} Following
-              </Typography>
-              <Typography variant="body2" color="textSecondary">
-                {website}
-              </Typography>
-              <Button variant="contained" color="primary" component={Link} to="/timer">
-                Start Studying
-              </Button>
-            </Grid>
-          </Grid>
+      <Paper sx={{ p: 2 }}>
+          <AvatarSection
+            imageUrl={profile.imageUrl}
+            name={profile.name}
+            bio={profile.bio}
+            followers={profile.followers}
+            following={profile.following}
+            website={profile.website}
+            handleEditProfile={handleEditProfile}
+          />
         </Paper>
+
+        <ProfilePostsSection
+          posts={profile.posts}
+          handleEditPost={handleEditPost}
+          handleLikePost={handleLikePost}
+        />
         <Outlet />
       </Box>
     </ThemeProvider>
