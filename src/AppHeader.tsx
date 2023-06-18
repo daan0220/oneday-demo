@@ -21,6 +21,9 @@ const AppHeader: React.FC<AppHeaderProps> = ({ sx }) => {
         <IconButton size="large" color="inherit" aria-label="search">
           <SearchIcon />
         </IconButton>
+        <IconButton size="large" color="inherit" aria-label="person">
+          <PersonIcon />
+        </IconButton>
       </Toolbar>
     </AppBar>
   );
