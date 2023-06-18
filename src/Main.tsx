@@ -1,16 +1,23 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Box, Paper, createTheme, ThemeProvider } from '@mui/material';
+import { Typography, Box, Paper, createTheme, ThemeProvider, AppBar, Toolbar, IconButton, Badge } from '@mui/material';
 import { styled } from '@mui/system';
 import { getDoc, doc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
 import { Navigate, useNavigate, Link, Outlet } from 'react-router-dom';
-import { Button, IconButton } from '@mui/material';
-import { MoreHoriz as MoreHorizIcon, Favorite as FavoriteIcon } from '@mui/icons-material';
+import { Button } from '@mui/material';
+import { MoreHoriz as MoreHorizIcon, Favorite as FavoriteIcon, Notifications as NotificationsIcon, Search as SearchIcon } from '@mui/icons-material';
 import AvatarSection from './AvatarSection';
 import ProfilePostsSection from './ProfilePostsSection';
+import AppHeader from './AppHeader';
 
-const theme = createTheme();
+const theme = createTheme({
+  palette: {
+    background: {
+      default: '#E0F7FA', // 背景色を水色に設定
+    },
+  },
+});
 
 const EditLink = styled(Link)(({ theme }) => ({
   color: theme.palette.primary.main,
@@ -135,8 +142,11 @@ const Home = () => {
 
   return (
     <ThemeProvider theme={theme}>
-      <Box sx={{ backgroundColor: '#f7f7f7', padding: '20px' }}>
-      <Paper sx={{ p: 2 }}>
+      <Box sx={{ backgroundColor: 'background.default', padding: '20px' }}>
+        
+      <AppHeader sx={{ backgroundColor: '#80DEEA' }} />
+
+        <Paper sx={{ p: 2 }}>
           <AvatarSection
             imageUrl={profile.imageUrl}
             name={profile.name}
