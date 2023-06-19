@@ -1,21 +1,6 @@
-import React, { useState } from 'react';
-import {
-  Typography,
-  Box,
-  Paper,
-  IconButton,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
-  Button,
-} from '@mui/material';
-import {
-  MoreHoriz as MoreHorizIcon,
-  Favorite as FavoriteIcon,
-  FavoriteBorder as FavoriteBorderIcon,
-} from '@mui/icons-material';
+import React from 'react';
+import PostItem from './PostItem';
+import EditPostDialog from './EditPostDialog';
 
 interface Post {
   studyTheme: string;
@@ -35,8 +20,8 @@ const ProfilePostsSection: React.FC<ProfilePostsSectionProps> = ({
   handleEditPost,
   handleLikePost,
 }) => {
-  const [editIndex, setEditIndex] = useState<number | null>(null);
-  const [editPost, setEditPost] = useState<string>('');
+  const [editIndex, setEditIndex] = React.useState<number | null>(null);
+  const [editPost, setEditPost] = React.useState<string>('');
 
   const handleOpenEditDialog = (index: number, initialPost: string) => {
     setEditIndex(index);
@@ -60,61 +45,28 @@ const ProfilePostsSection: React.FC<ProfilePostsSectionProps> = ({
   };
 
   return (
-    <Box sx={{ marginTop: '20px' }}>
+    <div>
       {posts.length > 0 ? (
         posts.map((post, index) => (
-          <Paper key={index} sx={{ p: 2, mb: 2 }}>
-            <Typography variant="h6" gutterBottom>
-              {post.studyTheme}
-            </Typography>
-            <Typography variant="body1">{post.additionalText}</Typography>
-            <Typography variant="caption" color="textSecondary">
-              {post.timestamp.toLocaleString()}
-            </Typography>
-            <Box
-              sx={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                mt: 2,
-              }}
-            >
-              <IconButton onClick={() => handleOpenEditDialog(index, post.additionalText)}>
-                <MoreHorizIcon />
-              </IconButton>
-              <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                <IconButton onClick={() => handleLikePost(index)}>
-                  {post.likes % 2 === 0 ? <FavoriteBorderIcon /> : <FavoriteIcon color="error" />}
-                </IconButton>
-                <Typography variant="body2" color="textSecondary">
-                  {post.likes} Likes
-                </Typography>
-              </Box>
-            </Box>
-          </Paper>
+          <PostItem
+            key={index}
+            post={post}
+            index={index}
+            handleOpenEditDialog={handleOpenEditDialog}
+            handleLikeClick={handleLikePost}
+          />
         ))
       ) : (
-        <Typography variant="body1">No posts yet.</Typography>
+        <p>No posts yet.</p>
       )}
-
-      <Dialog open={editIndex !== null} onClose={handleCloseEditDialog}>
-        <DialogTitle>Edit Post</DialogTitle>
-        <DialogContent>
-          <TextField
-            multiline
-            rows={4}
-            variant="outlined"
-            value={editPost}
-            onChange={handleEditPostChange}
-            fullWidth
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseEditDialog}>Cancel</Button>
-          <Button onClick={handleSaveEditPost}>Save</Button>
-        </DialogActions>
-      </Dialog>
-    </Box>
+      <EditPostDialog
+        open={editIndex !== null}
+        handleClose={handleCloseEditDialog}
+        value={editPost}
+        handleChange={handleEditPostChange}
+        handleSave={handleSaveEditPost}
+      />
+    </div>
   );
 };
 

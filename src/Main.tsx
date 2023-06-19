@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Box, Paper, createTheme, ThemeProvider, AppBar, Toolbar, IconButton, Badge } from '@mui/material';
+import { Typography, Box, Paper, createTheme, ThemeProvider } from '@mui/material';
 import { styled } from '@mui/system';
 import { getDoc, doc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
@@ -9,7 +9,6 @@ import { Button } from '@mui/material';
 import { MoreHoriz as MoreHorizIcon, Favorite as FavoriteIcon, Notifications as NotificationsIcon, Search as SearchIcon } from '@mui/icons-material';
 import AvatarSection from './AvatarSection';
 import ProfilePostsSection from './ProfilePostsSection';
-import AppHeader from './AppHeader';
 
 const theme = createTheme({
   palette: {
@@ -126,7 +125,7 @@ const Home = () => {
       console.error('Error updating post in Firestore: ', error);
     }
   };
-  
+
   const handleLikePost = async (index: number) => {
     const updatedPosts = [...profile!.posts];
     const post = updatedPosts[index];
@@ -154,7 +153,6 @@ const Home = () => {
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ backgroundColor: 'background.default', padding: '20px' }}>
-        <AppHeader sx={{ backgroundColor: '#80DEEA' }} />
         <Paper sx={{ p: 2 }}>
           <AvatarSection
             imageUrl={profile.imageUrl}
