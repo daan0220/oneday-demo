@@ -110,12 +110,23 @@ const Home = () => {
     navigate('/edit-profile');
   };
 
-  const { name, bio, followers, following, website, imageUrl } = profile;
-
-  const handleEditPost = (index: number) => {
-    navigate(`/edit-post/${index}`);
+  const handleEditPost = async (index: number, updatedPost: string) => {
+    const updatedPosts = [...profile!.posts];
+    const post = updatedPosts[index];
+    post.additionalText = updatedPost;
+    setProfile({ ...profile!, posts: updatedPosts });
+  
+    // Firestore上のデータを更新
+    const userId = auth.currentUser!.uid;
+    const profileDocRef = doc(db, 'profiles', userId);
+    try {
+      await updateDoc(profileDocRef, { posts: updatedPosts });
+      console.log('Post updated in Firestore.');
+    } catch (error) {
+      console.error('Error updating post in Firestore: ', error);
+    }
   };
-
+  
   const handleLikePost = async (index: number) => {
     const updatedPosts = [...profile!.posts];
     const post = updatedPosts[index];
@@ -143,9 +154,7 @@ const Home = () => {
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ backgroundColor: 'background.default', padding: '20px' }}>
-        
-      <AppHeader sx={{ backgroundColor: '#80DEEA' }} />
-
+        <AppHeader sx={{ backgroundColor: '#80DEEA' }} />
         <Paper sx={{ p: 2 }}>
           <AvatarSection
             imageUrl={profile.imageUrl}
