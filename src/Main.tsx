@@ -1,15 +1,12 @@
 import React, { useEffect, useState } from 'react';
-import { Typography, Box, Paper, createTheme, ThemeProvider, AppBar, Toolbar, IconButton, Badge } from '@mui/material';
+import { Typography, Box, Paper, createTheme, ThemeProvider } from '@mui/material';
 import { styled } from '@mui/system';
-import { getDoc, doc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { doc, setDoc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { db } from './firebase';
 import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { Navigate, useNavigate, Link, Outlet } from 'react-router-dom';
-import { Button } from '@mui/material';
-import { MoreHoriz as MoreHorizIcon, Favorite as FavoriteIcon, Notifications as NotificationsIcon, Search as SearchIcon } from '@mui/icons-material';
+import { useNavigate, Link, Outlet } from 'react-router-dom';
 import AvatarSection from './AvatarSection';
 import ProfilePostsSection from './ProfilePostsSection';
-import AppHeader from './AppHeader';
 
 const theme = createTheme({
   palette: {
@@ -41,8 +38,8 @@ interface ProfileData {
 interface Post {
   studyTheme: string;
   additionalText: string;
-  timestamp: any; // 適切なタイムスタンプの型に置き換えてください
-  likes: number; // いいねの数を表すプロパティを追加
+  timestamp: any; 
+  likes: number; 
 }
 
 const Home = () => {
@@ -126,7 +123,7 @@ const Home = () => {
       console.error('Error updating post in Firestore: ', error);
     }
   };
-  
+
   const handleLikePost = async (index: number) => {
     const updatedPosts = [...profile!.posts];
     const post = updatedPosts[index];
@@ -154,7 +151,6 @@ const Home = () => {
   return (
     <ThemeProvider theme={theme}>
       <Box sx={{ backgroundColor: 'background.default', padding: '20px' }}>
-        <AppHeader sx={{ backgroundColor: '#80DEEA' }} />
         <Paper sx={{ p: 2 }}>
           <AvatarSection
             imageUrl={profile.imageUrl}
